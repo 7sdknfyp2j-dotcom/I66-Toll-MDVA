@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="I-66 Toll">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>I-66 Toll</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #0f172a, #1e293b);
+      color: white;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .app {
+      width: 100%;
+      max-width: 430px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 24px 70px rgba(0,0,0,.35);
+      backdrop-filter: blur(16px);
+    }
+    .eyebrow { opacity: .75; font-size: 14px; margin: 0 0 8px; }
+    h1 { font-size: 34px; line-height: 1; margin: 0 0 16px; letter-spacing: -.03em; }
+    .route {
+      background: rgba(255,255,255,.10);
+      border-radius: 18px;
+      padding: 14px;
+      margin: 16px 0 20px;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+    .price {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      margin: 12px 0 6px;
+    }
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      padding: 17px 18px;
+      margin-top: 20px;
+      font-weight: 750;
+      font-size: 18px;
+      background: #38bdf8;
+      color: #082f49;
+      cursor: pointer;
+    }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: .7; }
+    .status { margin-top: 16px; min-height: 42px; opacity: .9; font-size: 14px; line-height: 1.35; }
+    .card {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.10);
+    }
+    .card-title { font-size: 18px; font-weight: 700; }
+    .card-price { font-size: 42px; font-weight: 800; margin-top: 6px; letter-spacing: -.04em; }
+    .card-note { font-size: 13px; opacity: .75; margin-top: 6px; }
+    .small { margin-top: 18px; opacity: .65; font-size: 12px; line-height: 1.35; }
+    .error { color: #fecaca; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <p class="eyebrow">One-tap toll check</p>
+    <h1>I-66 Toll</h1>
+
+    <div class="route">
+      <strong>Eastbound:</strong><br>
+      Route 267 / Dulles Toll Road → Fairfax Drive or Washington Blvd
+    </div>
+
+    <div class="price" id="price">—</div>
+
+    <button id="checkButton">Check Tolls Now</button>
+
+    <div class="status" id="status">Tap the button to refresh toll estimates.</div>
+
+    <div class="small">
+      Toll values are estimates. This app currently mirrors off-hours behavior by showing no toll outside weekday eastbound tolling hours.
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
