@@ -1,64 +1,44 @@
-const HOME = "1490 Selworthy Rd, Rockville, MD 20854";
-const OFFICE = "1010 N Glebe Rd, Arlington, VA 22201";
+const HOME = { lat: 39.06562, lon: -77.18964 };
+const OFFICE = { lat: 38.88323, lon: -77.11638 };
 
 const ROUTES = [
   {
     id: "fairfax",
     label: "I-66 → Fairfax Drive",
-    waypoints: [
-      "Route 267 and I-66, Falls Church, VA",
-      "Fairfax Drive and N Glebe Rd, Arlington, VA"
+    points: [
+      HOME,
+      { lat: 38.87893, lon: -77.22810 }, // I-66 / Dulles Connector area
+      { lat: 38.88245, lon: -77.11275 }, // Fairfax Drive / Glebe area
+      OFFICE
     ]
   },
   {
     id: "washington",
     label: "I-66 → Washington Blvd",
-    waypoints: [
-      "Route 267 and I-66, Falls Church, VA",
-      "Washington Blvd and I-66, Arlington, VA",
-      "Washington Blvd and N Glebe Rd, Arlington, VA"
+    points: [
+      HOME,
+      { lat: 38.87893, lon: -77.22810 }, // I-66 / Dulles Connector area
+      { lat: 38.88180, lon: -77.12920 }, // Washington Blvd exit area
+      { lat: 38.88245, lon: -77.11275 }, // Fairfax / Glebe area
+      OFFICE
     ]
   },
   {
     id: "chainbridge",
     label: "No toll via Chain Bridge",
-    waypoints: [
-      "I-270 and I-495, Bethesda, MD",
-      "MacArthur Blvd and Clara Barton Pkwy, Bethesda, MD",
-      "Chain Bridge, Washington, DC",
-      "N Glebe Rd and Chain Bridge Rd, Arlington, VA"
+    points: [
+      HOME,
+      { lat: 38.99060, lon: -77.15710 }, // I-270 / I-495 area
+      { lat: 38.96850, lon: -77.13980 }, // Clara Barton / MacArthur area
+      { lat: 38.93000, lon: -77.11690 }, // Chain Bridge area
+      { lat: 38.92170, lon: -77.12420 }, // Glebe / Chain Bridge Rd area
+      OFFICE
     ]
   }
 ];
 
-async function geocode(address, key) {
-  const url =
-    "https://api.tomtom.com/search/2/geocode/" +
-    encodeURIComponent(address) +
-    ".json?key=" +
-    encodeURIComponent(key) +
-    "&limit=1";
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!data.results || !data.results.length) {
-    throw new Error("Could not geocode: " + address);
-  }
-
-  return data.results[0].position;
-}
-
-async function getRoute(route, key, home, office) {
-  const points = [home];
-
-  for (const waypoint of route.waypoints) {
-    points.push(await geocode(waypoint, key));
-  }
-
-  points.push(office);
-
-  const coordinateString = points
+async function getRoute(route, key) {
+  const coordinateString = route.points
     .map(p => `${p.lat},${p.lon}`)
     .join(":");
 
@@ -74,15 +54,19 @@ async function getRoute(route, key, home, office) {
   const data = await response.json();
 
   if (!data.routes || !data.routes.length) {
-    throw new Error("No route returned for " + route.label);
+    return {
+      id: route.id,
+      label: route.label,
+      ok: false,
+      error: data.error?.description || "No route returned"
+    };
   }
 
   const summary = data.routes[0].summary;
 
   const minutes = Math.round(summary.travelTimeInSeconds / 60);
   const delay = Math.round((summary.trafficDelayInSeconds || 0) / 60);
-  const miles =
-    Math.round((summary.lengthInMeters / 1609.344) * 10) / 10;
+  const miles = Math.round((summary.lengthInMeters / 1609.344) * 10) / 10;
 
   return {
     id: route.id,
@@ -111,31 +95,20 @@ export async function onRequest(context) {
       }),
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" }
       }
     );
   }
 
   try {
-    const home = await geocode(HOME, key);
-    const office = await geocode(OFFICE, key);
-
     const routes = await Promise.all(
-      ROUTES.map(route => getRoute(route, key, home, office))
+      ROUTES.map(route => getRoute(route, key))
     );
-
-    const bestRoute = [...routes].sort(
-      (a, b) => a.minutes - b.minutes
-    )[0];
 
     return new Response(
       JSON.stringify({
         ok: true,
         updatedAt: new Date().toISOString(),
-        bestRouteId: bestRoute.id,
-        bestRouteLabel: bestRoute.label,
         routes
       }),
       {
@@ -153,9 +126,7 @@ export async function onRequest(context) {
       }),
       {
         status: 500,
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: { "Content-Type": "application/json" }
       }
     );
   }
