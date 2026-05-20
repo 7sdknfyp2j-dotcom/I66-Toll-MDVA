@@ -16,7 +16,9 @@ function localTime(iso) {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url + "?ts=" + Date.now(), { cache: "no-store" });
+  const response = await fetch(url + "?ts=" + Date.now(), {
+    cache: "no-store"
+  });
   return response.json();
 }
 
@@ -35,7 +37,7 @@ function renderDashboard(tollData, trafficData) {
     return `
       <div class="card">
         <div class="card-title">${route.label}</div>
-        <div class="card-price">${route.timeLabel || "Time unavailable"}</div>
+        <div class="card-price">${route.timeLabel || "Unavailable"}</div>
         <div class="card-note">${route.distanceLabel || ""}</div>
         <div class="card-note">${route.delayLabel || ""}</div>
         <div class="card-note">Toll: ${tollText}</div>
@@ -84,7 +86,9 @@ button.addEventListener("click", checkRoutes);
 checkRoutes();
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch(() => {});
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
   });
 }
