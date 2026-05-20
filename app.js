@@ -2,7 +2,7 @@ const price = document.getElementById("price");
 const statusEl = document.getElementById("status");
 const button = document.getElementById("checkButton");
 
-function localTime(iso) {
+function formatTime(iso) {
   try {
     return new Date(iso).toLocaleString([], {
       month: "short",
@@ -17,9 +17,9 @@ function localTime(iso) {
 
 async function checkTolls() {
   button.disabled = true;
-  button.textContent = "Checking…";
-  price.textContent = "Checking tolls…";
-  statusEl.textContent = "";
+  button.textContent = "Checking Tolls...";
+  price.textContent = "Loading...";
+  statusEl.innerHTML = "";
 
   try {
     const response = await fetch("/api/toll?ts=" + Date.now(), {
@@ -29,14 +29,16 @@ async function checkTolls() {
     const data = await response.json();
 
     if (!data.ok) {
-      throw new Error(data.error || "Toll lookup failed.");
+      throw new Error(data.error || "Unable to retrieve tolls.");
     }
 
+    // Main header text
     price.textContent = data.tollingActive
-      ? "Tolling window active"
-      : "No toll right now";
+      ? "Tolling Window Active"
+      : "No Toll Right Now";
 
-    const rows = data.routes.map(route => `
+    // Build route cards
+    const cards = data.routes.map(route => `
       <div class="card">
         <div class="card-title">${route.label}</div>
         <div class="card-price">${route.tollFormatted}</div>
@@ -45,22 +47,29 @@ async function checkTolls() {
     `).join("");
 
     statusEl.innerHTML = `
-      <div>Updated ${localTime(data.updatedAt)}</div>
-      ${rows}
+      <div style="margin-bottom: 16px;">
+        Updated ${formatTime(data.updatedAt)}
+      </div>
+      ${cards}
     `;
-  } catch (err) {
+  } catch (error) {
     price.textContent = "—";
-    statusEl.textContent = "Could not retrieve tolls: " + err.message;
+    statusEl.textContent =
+      "Could not retrieve tolls: " + error.message;
   } finally {
     button.disabled = false;
     button.textContent = "Check Tolls Now";
   }
 }
 
+// Set button text and click handler
 button.textContent = "Check Tolls Now";
 button.addEventListener("click", checkTolls);
+
+// Load automatically when page opens
 checkTolls();
 
+// Disable all service workers to avoid stale cache issues
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.getRegistrations().then(registrations => {
     for (const registration of registrations) {
